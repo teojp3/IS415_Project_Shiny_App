@@ -96,27 +96,27 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                             h4("However, not many people are technically trained to do such spatial analysis. Additionally, the only way for them to improve their breadth 
                                        and depth of knowledge pertaining to this area is limited to online resources. 
                                        Without proper foundation, any analysis done could be highly inaccurate as well."),
-                                                            h4("Therefore, our main focus is to develop a web-based geospatial analytical tool dedicated to Spatial Point Analysis, with two methods available for use."),
-                                                            h4("Through this geospatial application, we hope to give pointers to and allow users to conduct Spatial Point Analysis for their selected data with ease, regardless of their technical background. 
+                                                            h4("Therefore, our main focus is to develop a web-based geospatial analytical tool dedicated to Point Pattern Analysis, with two methods available for use."),
+                                                            h4("Through this geospatial application, we hope to give pointers to and allow users to conduct Point Pattern Analysis for their selected data with ease, regardless of their technical background. 
                                        Hence, the name Spatial Pointers is given for our application.")),
                                                      column(7,align = 'center',
                                                             img(src = 'Fig1.png', height = "50%", width = "50%", 
                                                                 style="display: block; margin-left: auto; margin-right: auto;"),
                                                             tags$a(href = "https://gistbok.ucgis.org/bok-topics/point-pattern-analysis", 
-                                                                   "Example of using Spatial Point Analysis for analysing existing fire stations in Austin, Texas, USA"
+                                                                   "Example of using Point Pattern Analysis for analysing existing fire stations in Austin, Texas, USA"
                                                             ))),
                                                    tags$br(),
                                                    
                                                    
-                                                   h3(tags$strong("What does Spatial Point Analysis do?")),
+                                                   h3(tags$strong("What does Point Pattern Analysis do?")),
                                                    tags$hr(),
-                                                   h4("Spatial point analysis methods helps provide insights about where things occur, how the distribution of incidents or the arrangement of
+                                                   h4("Point Pattern Analysis methods helps provide insights about where things occur, how the distribution of incidents or the arrangement of
                                           data aligns with other features in the landscape, and what the patterns may reveal about potential connections and correlations."),
                                                    tags$br(),
                                                    
                                                    h3(tags$strong("About our application: Spatial Pointers")),
                                                    tags$hr(),
-                                                   h4("Our application will assist users with two methods of Spatial Point Analysis:"), 
+                                                   h4("Our application will assist users with two methods of Point Pattern Analysis:"), 
                                                    tags$ul(
                                                      tags$li("Spatial Point Patterns Analysis (SPPA)", style = "font-size: 18px; font-weight: 500;"),
                                                      tags$li("Network-Constrained Point Patterns Analysis (NetSPPA)", style = "font-size: 18px; font-weight: 500;")),
