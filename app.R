@@ -337,13 +337,12 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                        tabPanel("About Spatial Kernel Density Estimation",
                                                                                 column(12,
                                                                                        h2("What is Spatial Kernel Density Estimation?"),
-                                                                                       h5("......A classical Kernel Density Estimate (KDE) estimates the continuous density of a set of events in a
-                                                                                  two-dimensional space, which is not suitable for analysing density of events occuring on a network.
-                                                                                  Therefore, the modified Network-Constrained Kernel Density Estimation is used to calculate density of events
-                                                                                  occuring along the edges of a network..."),
+                                                                                       h5("Kernel Density Estimation (KDE) is one of the mostly used density-based measures to estimate local density. 
+                                                                                          It creates a grid which each cell is assigned the density value of the kernel window centered on that cell. 
+                                                                                          The density value is estimated by counting the number of object/events in that kernel window."),
                                                                                        h3("How to interpret the output?"),
-                                                                                       h5("......Essentially, the darker the color of the road, the higher the relative density of the point features as compared 
-                                                                                  to road segments with ligher color (meaning lower density)..."),
+                                                                                       h5("The v in the legend indicate the number of object/events in kernel window centered in each grid.
+                                                                                       Essentially, the darker the color of the area, the higher the intensity of points density in that area."),
                                                                                 )))
                                                               )),
                                                      
@@ -358,18 +357,15 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                        id = "SPPA_G_info",
                                                                        tabPanel("About G-Function",
                                                                                 column(12,
-                                                                                       h2("......What is Ripley's G-Function?"),
-                                                                                       h5("......Essentially, Ripley's K-function measures the number of events found up to a 
-                                                                                 given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
-                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
-                                                                                       h3("......How to interpret the graph?"),
-                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point features shows a Clustering pattern.")),
-                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point features shows a Regular/Dispersion pattern.")),
-                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......not statistically significant and
-                                                                                    the point features shows a Complete Spatial Randomness pattern."))
+                                                                                       h2("What is G-Function?"),
+                                                                                       h5("The G-function calculates the cumulative frequency distribution of the nearest neighbor distance of a point pattern."),
+                                                                                       h3("How to interpret the graph?"),
+                                                                                       h5("If the observed G is above the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble clustered distribution.")),
+                                                                                       h5("If not, if the observed G is below the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble dispersed distribution.")),
+                                                                                       h5("Else, if the observed G is inside the envelope, it means "),
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the points resemble random distribution."))
                                                                                 ))))),
                                                      
                                                      tabPanel("SPPA F-Function", 
@@ -383,18 +379,16 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                        id = "SPPA_F_info",
                                                                        tabPanel("About F-Function",
                                                                                 column(12,
-                                                                                       h2("......What is Ripley's F-Function?"),
-                                                                                       h5("......Essentially, Ripley's K-function K-function measures the number of events found up to a 
-                                                                                 given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
-                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
-                                                                                       h3("......How to interpret the graph?"),
-                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point features shows a Clustering pattern.")),
-                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point features shows a Regular/Dispersion pattern.")),
-                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated K(h) is:"),
-                                                                                       h5(tags$strong("......not statistically significant and
-                                                                                    the point features shows a Complete Spatial Randomness pattern."))
+                                                                                       h2("What is F-Function?"),
+                                                                                       h5("The F-function first generates a few random points in the study area, 
+                                                                                          and then it determines the minimum distance from each random point in P to any original points in the study area."),
+                                                                                       h3("How to interpret the graph?"),
+                                                                                       h5("If the observed F is above the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble clustered distribution.")),
+                                                                                       h5("If not, if the observed F is below the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble dispersed distribution.")),
+                                                                                       h5("Else, if the observed F is inside the envelope, it means "),
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the points resemble random distribution."))
                                                                                 ))))),
                                                      
                                                      tabPanel("SPPA Cross L-Function", 
@@ -408,18 +402,15 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                        id = "SPPA_CrossL_info",
                                                                        tabPanel("About Cross L-Function",
                                                                                 column(12,
-                                                                                       h2("......What is Ripley's Cross L-Function?"),
-                                                                                       h5("......An extension of Ripley's K-function, the Cross K-function measures the number of main events (A) around
-                                                                         a set of secondary events (B), and again the graph helps illustrates the spatial dependence (clustering 
-                                                                         or dispersion) of the point A features around point B features (which in this case, are our chosen variables from the side panel) over a wide range of scales."),
-                                                                                       h3("......How to interpret the graph?"),
-                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point A features shows a Clustering pattern around Point B features.")),
-                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                                       h5(tags$strong("......statistically significant and the point A features shows a Regular/Dispersion pattern around Point B features.")),
-                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                                       h5(tags$strong("......not statistically significant and
-                                                                      the point features shows a Complete Spatial Randomness pattern."))
+                                                                                       h2("What is Cross L-Function?"),
+                                                                                       h5("Simply put, Cross L-function measure the number of type A points up to a given distance from a type B point."),
+                                                                                       h3("How to interpret the graph?"),
+                                                                                       h5("If the observed L is above the envelope, "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude two types of points resemble attraction patterns, suggesting clustering.")),
+                                                                                       h5("If not, if the observed L is below the enveloped, "),
+                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the two types of points resemble repulsion patterns, suggesting dispersion.")),
+                                                                                       h5("Else, if the observed L is inside the envelope, it means "),
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the two types of points resemble random distribution and are independent of each other."))
                                                                                 ))))),
                                                    ))
                            )),
