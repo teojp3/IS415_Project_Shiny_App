@@ -10,12 +10,15 @@ library(sp)
 library(sf)
 library(rgdal)
 library(spNetwork)
+library(spatstat)
+library(raster)
+library(maptools)
+
 
 
 # Import Data
 
 ## NetSPPA
-
 ### Road Network
 network <- readOGR(dsn="data/Punggol", 
                    layer="Punggol_St",
@@ -24,7 +27,6 @@ network <- readOGR(dsn="data/Punggol",
 network <- spTransform(network,CRS("+init=epsg:3414"))
 
 ### Childcare Centres
-
 childcare <- readOGR(dsn="data/Punggol",
                      layer="Punggol_CC",
                      verbose = FALSE)
@@ -32,7 +34,6 @@ childcare <- readOGR(dsn="data/Punggol",
 childcare <-spTransform(childcare, CRS("+init=epsg:3414"))
 
 ### Cross K Factors
-
 Bus <- readOGR(dsn="data/BusStop", 
                layer="BusStop_P",
                verbose = FALSE)
@@ -53,9 +54,71 @@ Schools <- st_as_sf(Schools, coords = c("Longitude", "Latitude"), crs = 4326) %>
 Schools <- as(Schools, "Spatial")
 
 ### Remove NA
-
 lixels <- spNetwork::lixelize_lines(network,700,mindist = 350)
 samples <- spNetwork::lines_center(lixels)
+
+
+## SPPA
+### SG Outline
+sg_sf <- st_read(dsn = "data2/sg", layer="CostalOutline")
+sg_sf <- st_set_crs(sg_sf, 3414)
+
+### McDonald
+mc <- read_csv("data2/mc_prepared.csv")
+mc_sf <- st_as_sf(mc, coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(crs = 3414)
+
+### Cross L Factors
+kfc <- read_csv("data2/kfc_prepared.csv")
+kfc_sf <- st_as_sf(kfc, coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(crs = 3414)
+
+mrt <- read_csv("data2/MRT_prepared.csv")
+mrt_sf <- st_as_sf(mrt, coords = c("LONGITUDE", "LATITUDE"), crs=4326) %>%
+  st_transform(crs = 3414)
+
+gym_sf <- st_read("data2/gym/gyms-sg-geojson.geojson") %>%
+  st_transform(crs = 3414)
+
+cc_sf <- st_read("data2/CC/community-clubs-geojson.geojson") %>%
+  st_transform(crs = 3414)
+
+### data wrangling
+kfc <- as_Spatial(kfc_sf)
+mrt <- as_Spatial(mrt_sf)
+mc <- as_Spatial(mc_sf)
+gym <- as_Spatial(gym_sf)
+cc <- as_Spatial(cc_sf)
+sg <- as_Spatial(st_zm(sg_sf))
+kfc_sp <- as(kfc, "SpatialPoints")
+mrt_sp <- as(mrt, "SpatialPoints")
+mc_sp <- as(mc, "SpatialPoints")
+gym_sp <- as(gym, "SpatialPoints")
+cc_sp <- as(cc, "SpatialPoints")
+sg_sp <- as(sg, "SpatialPolygons")
+kfc_ppp <- as(kfc_sp, "ppp")
+mrt_ppp <- as(mrt_sp, "ppp")
+mc_ppp <- as(mc_sp, "ppp")
+gym_ppp <- as(gym_sp, "ppp")
+cc_ppp <- as(cc_sp, "ppp")
+kfc_ppp_jit <- rjitter(kfc_ppp, retry=TRUE, nsim=1, drop=TRUE)
+mrt_ppp_jit <- rjitter(mrt_ppp, retry=TRUE, nsim=1, drop=TRUE)
+mc_ppp_jit <- rjitter(mc_ppp, retry=TRUE, nsim=1, drop=TRUE)
+gym_ppp_jit <- rjitter(gym_ppp, retry=TRUE, nsim=1, drop=TRUE)
+cc_ppp_jit <- rjitter(cc_ppp, retry=TRUE, nsim=1, drop=TRUE)
+
+sg_owin <- as(sg_sp, "owin")
+kfcSG_ppp = kfc_ppp_jit[sg_owin]
+mrtSG_ppp = mrt_ppp_jit[sg_owin]
+mcSG_ppp = mc_ppp_jit[sg_owin]
+gymSG_ppp = gym_ppp_jit[sg_owin]
+ccSG_ppp = cc_ppp_jit[sg_owin]
+kfcSG_ppp.km <- rescale(kfcSG_ppp, 1000, "km")
+mrtSG_ppp.km <- rescale(mrtSG_ppp, 1000, "km")
+mcSG_ppp.km <- rescale(mcSG_ppp, 1000, "km")
+gymSG_ppp.km <- rescale(gymSG_ppp, 1000, "km")
+ccSG_ppp.km <- rescale(ccSG_ppp, 1000, "km")
+
 
 
 # UI
@@ -124,6 +187,238 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                           of the input spatial point datasets and conduct various hypothesis tests to derive statistical conclusions 
                                           on the distributions of datasets."),
                                                    width = 9)
+                           )),
+                  
+                  # SPPA Panel
+                  tabPanel("SPPA", fluid = TRUE, icon=icon("map"),
+                           sidebarLayout(position = 'right',
+                                         sidebarPanel(fluid = TRUE, width = 3,
+                                                      
+                                                      
+                                                      # If Kernel Density Estimation tabPanel is clicked, the sidebarpanel below will be shown
+                                                      conditionalPanel(
+                                                        'input.SPPA_var === "SPPA Kernel Density Estimation"',
+                                                        tags$strong("SPPA Kernel Density Estimation Variable Inputs"),
+                                                        #helpText("Click the Kernel Density Estimation Tab to see the changes)
+                                                        selectInput(inputId = "SPPA_main_var",
+                                                                    label = "Choose a variable to compute Kernel Density Estimation:",
+                                                                    choices = c("McDonald's" = "mcSG_ppp",
+                                                                                "KFC" = "kfcSG_ppp",
+                                                                                "MRT Stations" = "mrtSG_ppp",
+                                                                                "Gyms" = "gymSG_ppp",
+                                                                                "Community Centers" = "ccSG_ppp",
+                                                                                "Uploaded Data" = "upload"),
+                                                                    selected = "mcSG_ppp"),
+                                                        selectInput(inputId = "SPPA_kernel",
+                                                                    label = "Choose the Kernel smoothing method to be used:",
+                                                                    choices = c("Gaussian" = "gaussian",
+                                                                                "Epanechnikov" = "epanechnikov",
+                                                                                "Quartic" = "quartic",
+                                                                                "Disc" = "disc"),
+                                                                    selected = "gaussian"),
+                                                        radioButtons(inputId = "SPPA_bandwidth_method",
+                                                                     label = "Select the bandwidth method to be used:",
+                                                                     choices = c("Auto" = "auto",
+                                                                                 "Fixed" = "fixed", 
+                                                                                 "Adaptive" = "adaptive"),
+                                                                     selected = "auto"),
+                                                        conditionalPanel(
+                                                          condition = "input.SPPA_bandwidth_method == 'auto'",
+                                                          selectInput(inputId = "SPPA_bw_auto_var",
+                                                                      label = "Select the automatic bandwidth method to be used:",
+                                                                      choices = c("bw.diggle()" = "bw.diggle",
+                                                                                  "bw.CvL()" =  "bw.CvL", 
+                                                                                  "bw.scott()" = "bw.scott",
+                                                                                  "bw.ppl()" = "bw.ppl"),
+                                                                      selected = "bw.diggle"),
+                                                        ),
+                                                        conditionalPanel(
+                                                          condition = "input.SPPA_bandwidth_method == 'fixed'",
+                                                          sliderInput(inputId = "SPPA_bw_fix_var",
+                                                                      label = "Select the fixed bandwidth to be used: (in km)",
+                                                                      min = 0,
+                                                                      max = 5,
+                                                                      step = 0.1,
+                                                                      value = 1),
+                                                        ),
+                                                        actionButton("SPPA_Run_KDE", "Run Analysis")
+                                                      ),
+                                                      
+                                                      # If G-Function tabPanel is clicked, the sidebarpanel below will be shown
+                                                      conditionalPanel(
+                                                        'input.SPPA_var === "SPPA G-Function"',
+                                                        tags$strong("SPPA G-Function Variable Inputs"),
+                                                        #helpText("Click the G-Function Tab to see the changes)
+                                                        selectInput(inputId = "SPPA_G_Main",
+                                                                    label = "Choose a variable to compute G-Function:",
+                                                                    choices = c("McDonald's" = "mcSG_ppp",
+                                                                                "KFC" = "kfcSG_ppp",
+                                                                                "MRT Stations" = "mrtSG_ppp",
+                                                                                "Gyms" = "gymSG_ppp",
+                                                                                "Community Centers" = "ccSG_ppp",
+                                                                                "Uploaded Data" = "upload"),
+                                                                    selected = "mcSG_ppp"),
+                                                        sliderInput(inputId = "SPPA_G_No_Simulations",
+                                                                    label = "Number of Simulations:",
+                                                                    min = 5,
+                                                                    max = 99,
+                                                                    value = 50),
+                                                        actionButton("SPPA_Run_Gfunc", "Run Analysis")
+                                                      ),
+                                                      
+                                                      # If F-Function tabPanel is clicked, the sidebarpanel below will be shown
+                                                      conditionalPanel(
+                                                        'input.SPPA_var === "SPPA F-Function"',
+                                                        tags$strong("SPPA F-Function Variable Inputs"),
+                                                        #helpText("Click the F-Function Tab to see the changes)
+                                                        selectInput(inputId = "SPPA_F_Main",
+                                                                    label = "Choose a variable to compute F-Function:",
+                                                                    choices = c("McDonald's" = "mcSG_ppp",
+                                                                                "KFC" = "kfcSG_ppp",
+                                                                                "MRT Stations" = "mrtSG_ppp",
+                                                                                "Gyms" = "gymSG_ppp",
+                                                                                "Community Centers" = "ccSG_ppp",
+                                                                                "Uploaded Data" = "upload"),
+                                                                    selected = "mcSG_ppp"),
+                                                        sliderInput(inputId = "SPPA_F_No_Simulations",
+                                                                    label = "Number of Simulations:",
+                                                                    min = 5,
+                                                                    max = 99,
+                                                                    value = 50),
+                                                        actionButton("SPPA_Run_Ffunc", "Run Analysis")
+                                                      ),
+                                                      
+                                                      # If Cross L-Function tabPanel is clicked, the sidebarpanel below will be shown
+                                                      conditionalPanel(
+                                                        'input.SPPA_var === "SPPA Cross L-Function"',
+                                                        tags$strong("SPPA Cross L-Function Variable Inputs"),
+                                                        #helpText("Click the Cross L-Function Tab to see the changes)
+                                                        selectInput(inputId = "SPPA_CrossL_Main",
+                                                                    label = "Choose the main variable to compute Cross L-Function:",
+                                                                    choices = c("McDonald's" = "mcSG_ppp",
+                                                                                "KFC" = "kfcSG_ppp",
+                                                                                "MRT Stations" = "mrtSG_ppp",
+                                                                                "Gyms" = "gymSG_ppp",
+                                                                                "Community Centers" = "ccSG_ppp",
+                                                                                "Uploaded Data" = "upload"),
+                                                                    selected = "mcSG_ppp"),
+                                                        selectInput(inputId = "SPPA_CrossL_Secondary",
+                                                                    label = "Choose the secondary variable (cannot be the same as main variable) to compute Cross L-Function:",
+                                                                    choices = c("McDonald's" = "mcSG_ppp",
+                                                                                "KFC" = "kfcSG_ppp",
+                                                                                "MRT Stations" = "mrtSG_ppp",
+                                                                                "Gyms" = "gymSG_ppp",
+                                                                                "Community Centers" = "ccSG_ppp",
+                                                                                "Uploaded Data" = "upload"),
+                                                                    selected = "kfcSG_ppp"),
+                                                        sliderInput(inputId = "SPPA_CrossL_No_Simulations",
+                                                                    label = "Number of Simulations:",
+                                                                    min = 5,
+                                                                    max = 99,
+                                                                    value = 50),
+                                                        actionButton("SPPA_Run_Cross_Lfunc", "Run Analysis")
+                                                      )                                                      
+                                         ),
+                                         mainPanel(width = 9,
+                                                   tabsetPanel(
+                                                     id = "SPPA_var",
+                                                     tabPanel("SPPA Kernel Density Estimation",
+                                                              column(12,
+                                                                     h6(tags$strong("Note:")),
+                                                                     h6(tags$i("Please wait a short while for the default map to load.")),
+                                                                     h6(tags$i("Variable: McDonald's, Kernel: Gaussian and Bandwidth method: autho-bw.diggle is used to plot the default map,
+                                                                        select alternative choices and click on 'Run Analysis' to update the map.")),
+                                                                     tmapOutput("SPPA_KDE_Map"),
+                                                                     tabsetPanel(
+                                                                       id = "SPPA_KDE_info",
+                                                                       tabPanel("About Spatial Kernel Density Estimation",
+                                                                                column(12,
+                                                                                       h2("What is Spatial Kernel Density Estimation?"),
+                                                                                       h5("......A classical Kernel Density Estimate (KDE) estimates the continuous density of a set of events in a
+                                                                                  two-dimensional space, which is not suitable for analysing density of events occuring on a network.
+                                                                                  Therefore, the modified Network-Constrained Kernel Density Estimation is used to calculate density of events
+                                                                                  occuring along the edges of a network..."),
+                                                                                       h3("How to interpret the output?"),
+                                                                                       h5("......Essentially, the darker the color of the road, the higher the relative density of the point features as compared 
+                                                                                  to road segments with ligher color (meaning lower density)..."),
+                                                                                )))
+                                                              )),
+                                                     
+                                                     tabPanel("SPPA G-Function", 
+                                                              column(12,
+                                                                     h6(tags$strong("Note:")),
+                                                                     h6(tags$i("Please wait a short while for the default graph to load.")),
+                                                                     h6(tags$i("Variable: McDonald's and Number of Simulations: 50 is used to plot the default map,
+                                                                        select alternative choices and click on 'Run Analysis' to update the map.")),
+                                                                     plotOutput("SPPA_G_Function"),
+                                                                     tabsetPanel(
+                                                                       id = "SPPA_G_info",
+                                                                       tabPanel("About G-Function",
+                                                                                column(12,
+                                                                                       h2("......What is Ripley's G-Function?"),
+                                                                                       h5("......Essentially, Ripley's K-function K-function measures the number of events found up to a 
+                                                                                 given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
+                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
+                                                                                       h3("......How to interpret the graph?"),
+                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point features shows a Clustering pattern.")),
+                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point features shows a Regular/Dispersion pattern.")),
+                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......not statistically significant and
+                                                                                    the point features shows a Complete Spatial Randomness pattern."))
+                                                                                ))))),
+                                                     
+                                                     tabPanel("SPPA F-Function", 
+                                                              column(12,
+                                                                     h6(tags$strong("Note:")),
+                                                                     h6(tags$i("Please wait a short while for the default graph to load.")),
+                                                                     h6(tags$i("Variable: McDonald's and Number of Simulations: 50 is used to plot the default map,
+                                                                        select alternative choices and click on 'Run Analysis' to update the map.")),
+                                                                     plotOutput("SPPA_F_Function"),
+                                                                     tabsetPanel(
+                                                                       id = "SPPA_F_info",
+                                                                       tabPanel("About F-Function",
+                                                                                column(12,
+                                                                                       h2("......What is Ripley's F-Function?"),
+                                                                                       h5("......Essentially, Ripley's K-function K-function measures the number of events found up to a 
+                                                                                 given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
+                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
+                                                                                       h3("......How to interpret the graph?"),
+                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point features shows a Clustering pattern.")),
+                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point features shows a Regular/Dispersion pattern.")),
+                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated K(h) is:"),
+                                                                                       h5(tags$strong("......not statistically significant and
+                                                                                    the point features shows a Complete Spatial Randomness pattern."))
+                                                                                ))))),
+                                                     
+                                                     tabPanel("SPPA Cross L-Function", 
+                                                              column(12,
+                                                                     h6(tags$strong("Note:")),
+                                                                     h6(tags$i("Please wait a short while for the default graph to load.")),
+                                                                     h6(tags$i("Main Variable: McDonald's, Secondary Variable: KFC and Number of Simulations: 50 is used to plot the default map,
+                                                                        select alternative choices and click on 'Run Analysis' to update the map.")),
+                                                                     plotOutput("SPPA_Cross_L_Function"),
+                                                                     tabsetPanel(
+                                                                       id = "SPPA_CrossL_info",
+                                                                       tabPanel("About Cross L-Function",
+                                                                                column(12,
+                                                                                       h2("......What is Ripley's Cross L-Function?"),
+                                                                                       h5("......An extension of Ripley's K-function, the Cross K-function measures the number of main events (A) around
+                                                                         a set of secondary events (B), and again the graph helps illustrates the spatial dependence (clustering 
+                                                                         or dispersion) of the point A features around point B features (which in this case, are our chosen variables from the side panel) over a wide range of scales."),
+                                                                                       h3("......How to interpret the graph?"),
+                                                                                       h5("......If the observed line (black line) is above the envelop, then it means that the estimated Cross K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point A features shows a Clustering pattern around Point B features.")),
+                                                                                       h5("......If not, if the observed line (black line) is below the envelop, then it means that the estimated Cross K(h) is:"),
+                                                                                       h5(tags$strong("......statistically significant and the point A features shows a Regular/Dispersion pattern around Point B features.")),
+                                                                                       h5("......Else, if the observed line (black line) is within the envelop, then it means that the estimated Cross K(h) is:"),
+                                                                                       h5(tags$strong("......not statistically significant and
+                                                                      the point features shows a Complete Spatial Randomness pattern."))
+                                                                                ))))),
+                                                   ))
                            )),
                   
                   # NetSPPA Panel
@@ -312,8 +607,11 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                     tabPanel("Shapefile Data Import",
                                                              column(12,
                                                                     tmapOutput("map")
-                                                             ))
-                ))))))
+                                                             )))
+                                                  )
+                                        )
+                           )
+))
 
 
 
@@ -394,6 +692,7 @@ server <- function(input, output, session){
     
   })
   
+  # NetSPPA K_Function
   output$NetSPPA_K_Function <- renderPlot({
     
     input$NetSPPA_Run_Kfunc
@@ -429,31 +728,32 @@ server <- function(input, output, session){
     
   })
   
+  # NetSPPA Cross_K_Function
   output$NetSPPA_Cross_K_Function <- renderPlot({
     
     input$NetSPPA_Run_Cross_Kfunc
     
     k_main <- reactive({
-      if (input$NetSPPA_K_Main == "childcare"){
+      if (input$NetSPPA_CrossK_Main == "childcare"){
         dataset <- childcare
       }
-      else if (input$NetSPPA_K_Main == "Bus"){
+      else if (input$NetSPPA_CrossK_Main == "Bus"){
         dataset <- Bus
       }
-      else if (input$NetSPPA_K_Main == "MRT"){
+      else if (input$NetSPPA_CrossK_Main == "MRT"){
         dataset <- MRT
       }
-      else if (input$NetSPPA_K_Main == "Schools"){
+      else if (input$NetSPPA_CrossK_Main == "Schools"){
         dataset <- Schools
       }
       return(dataset)
     })
     
     kcross_sec <- reactive({
-      if (input$NetSPPA_K_Main == "childcare"){
+      if (input$NetSPPA_CrossK_Secondary == "childcare"){
         dataset <- childcare
       }
-      if (input$NetSPPA_CrossK_Secondary == "Bus"){
+      else if (input$NetSPPA_CrossK_Secondary == "Bus"){
         dataset <- Bus
       }
       else if (input$NetSPPA_CrossK_Secondary == "MRT"){
@@ -479,6 +779,214 @@ server <- function(input, output, session){
     
     crossk$plotk
     
+  })
+  
+  
+
+  # SPPA KDE Map
+  output$SPPA_KDE_Map <- renderTmap({
+    
+    input$SPPA_Run_KDE
+
+    kde_var <- reactive({
+      if (input$SPPA_main_var == "mcSG_ppp"){
+        dataset <- mcSG_ppp.km
+      }
+      else if (input$SPPA_main_var == "kfcSG_ppp"){
+        dataset <- kfcSG_ppp.km
+      }
+      else if (input$SPPA_main_var == "mrtSG_ppp"){
+        dataset <- mrtSG_ppp.km
+      }
+      else if (input$SPPA_main_var == "gymSG_ppp"){
+        dataset <- gymSG_ppp.km
+      }
+      else if (input$SPPA_main_var == "ccSG_ppp"){
+        dataset <- ccSG_ppp.km
+      }
+      return(dataset)
+    })
+
+    kde <- reactive({
+      if (input$SPPA_bandwidth_method == 'auto'){
+        if (input$SPPA_bw_auto_var == 'bw.diggle'){
+          the_bw <- bw.diggle(kde_var())
+        }
+        else if (input$SPPA_bw_auto_var == 'bw.CvL'){
+          the_bw <- bw.CvL(kde_var())
+        }
+        else if (input$SPPA_bw_auto_var == 'bw.scott'){
+          the_bw <- bw.scott(kde_var())
+        }
+        else if (input$SPPA_bw_auto_var == 'bw.ppl'){
+          the_bw <- bw.ppl(kde_var())
+        }
+        kde <- isolate(density(kde_var(),
+                               sigma=as.numeric(the_bw),
+                               edge=TRUE,
+                               kernel=input$SPPA_kernel))
+        
+      }
+      else if (input$SPPA_bandwidth_method == 'fixed'){
+        kde <- isolate(density(kde_var(),
+                               sigma=input$SPPA_bw_fix_var,
+                               edge=TRUE,
+                               kernel=input$SPPA_kernel))
+      }
+      else if (input$SPPA_bandwidth_method == 'adaptive'){
+        kde <- isolate(adaptive.density(kde_var(), 
+                                        method="kernel"))
+      }
+      return (kde)
+    })
+    
+    # isolate() is used to ensure that the code doesnt run unless the Action Button is clicked
+    gridded_kde <- isolate(as.SpatialGridDataFrame.im(kde()))
+    kde_raster <- isolate(raster(gridded_kde))
+    projection(kde_raster) <- CRS("+init=EPSG:3414 +datum=WGS84 +units=km")
+    
+    tmap_mode("view")
+
+    SPPA_KDE <- isolate(tm_shape(sg_sf) +
+                          tm_borders(col = 'black',
+                                     lwd = 1,
+                                     alpha = 0.5) +
+                          tm_shape(kde_raster) + 
+                          tm_raster("v", alpha = 0.7) +
+                          tm_layout(legend.outside = TRUE, frame = FALSE, title = "KDE") +
+                          tm_basemap('OpenStreetMap'))
+  })
+  
+  # SPPA G_Function
+  output$SPPA_G_Function <- renderPlot({
+    
+    input$SPPA_Run_Gfunc
+    
+    g_main <- reactive({
+      if (input$SPPA_G_Main == "mcSG_ppp"){
+        dataset <- mcSG_ppp.km
+      }
+      else if (input$SPPA_G_Main == "kfcSG_ppp"){
+        dataset <- kfcSG_ppp.km
+      }
+      else if (input$SPPA_G_Main == "mrtSG_ppp"){
+        dataset <- mrtSG_ppp.km
+      }
+      else if (input$SPPA_G_Main == "gymSG_ppp"){
+        dataset <- gymSG_ppp.km
+      }
+      else if (input$SPPA_G_Main == "ccSG_ppp"){
+        dataset <- ccSG_ppp.km
+      }
+      return(dataset)
+    })
+    
+    #g_func <- isolate(Gest(g_main(), 
+    #                       correction = "border"))
+    #plot(g_func, xlim=c(0,1))
+    
+    g_func.csr <- isolate(envelope(g_main(), 
+                                   Gest, 
+                                   nsim = input$SPPA_G_No_Simulations))
+    plot(g_func.csr, xlim=c(0,1))
+    
+  })
+  
+  # SPPA F_Function
+  output$SPPA_F_Function <- renderPlot({
+    
+    input$SPPA_Run_Ffunc
+    
+    f_main <- reactive({
+      if (input$SPPA_F_Main == "mcSG_ppp"){
+        dataset <- mcSG_ppp.km
+      }
+      else if (input$SPPA_F_Main == "kfcSG_ppp"){
+        dataset <- kfcSG_ppp.km
+      }
+      else if (input$SPPA_F_Main == "mrtSG_ppp"){
+        dataset <- mrtSG_ppp.km
+      }
+      else if (input$SPPA_F_Main == "gymSG_ppp"){
+        dataset <- gymSG_ppp.km
+      }
+      else if (input$SPPA_F_Main == "ccSG_ppp"){
+        dataset <- ccSG_ppp.km
+      }
+      return(dataset)
+    })
+    
+    #f_func <- isolate(Fest(f_main(), 
+    #                       correction = "border"))
+    #plot(f_func, xlim=c(0,1))
+    
+    f_func.csr <- isolate(envelope(f_main(), 
+                                   Fest, 
+                                   nsim = input$SPPA_F_No_Simulations))
+    plot(f_func.csr, xlim=c(0,1))
+    
+  })
+  
+  # SPPA Cross_L_Function
+  output$SPPA_Cross_L_Function <- renderPlot({
+    
+    input$SPPA_Run_Cross_Lfunc
+    
+    lcross_main <- reactive({
+      if (input$SPPA_CrossL_Main == "mcSG_ppp"){
+        dataset <- mcSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Main == "kfcSG_ppp"){
+        dataset <- kfcSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Main == "mrtSG_ppp"){
+        dataset <- mrtSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Main == "gymSG_ppp"){
+        dataset <- gymSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Main == "ccSG_ppp"){
+        dataset <- ccSG_ppp.km
+      }
+      return(dataset)
+    })
+    
+    lcross_sec <- reactive({
+      if (input$SPPA_CrossL_Secondary == "mcSG_ppp"){
+        dataset <- mcSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Secondary == "kfcSG_ppp"){
+        dataset <- kfcSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Secondary == "mrtSG_ppp"){
+        dataset <- mrtSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Secondary == "gymSG_ppp"){
+        dataset <- gymSG_ppp.km
+      }
+      else if (input$SPPA_CrossL_Secondary == "ccSG_ppp"){
+        dataset <- ccSG_ppp.km
+      }
+      return(dataset)
+    })
+    
+    main_vs_sec<- superimpose('main_var'=lcross_main(), 'sec_var'=lcross_sec())
+    
+    #crossl <- isolate(Lcross(main_vs_sec, 
+    #                         i="main_var", j="sec_var",
+    #                         correction='border'))
+    #plot(crossl, . -r ~ r, 
+    #     xlab = "distance(km)", 
+    #     xlim=c(0, 10))
+    
+    crossl.csr <- isolate(envelope(main_vs_sec, 
+                                   Lcross, 
+                                   i="main_var", j="sec_var", 
+                                   correction='border', 
+                                   nsim=input$SPPA_CrossL_No_Simulations))
+    
+    plot(crossl.csr, . -r ~ r, xlab="distance(km)", xlim=c(0,10))
+
   })
   
 }
