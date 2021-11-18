@@ -326,7 +326,7 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                               column(12,
                                                                      h6(tags$strong("Note:")),
                                                                      h6(tags$i("Please wait a short while for the default map to load.")),
-                                                                     h6(tags$i("Variable: McDonald's, Kernel: Gaussian and Bandwidth method: autho-bw.diggle is used to plot the default map,
+                                                                     h6(tags$i("Variable: McDonald's, Kernel: Gaussian and Bandwidth method: auto-bw.diggle is used to plot the default map,
                                                                         select alternative choices and click on 'Run Analysis' to update the map.")),
                                                                      tmapOutput("SPPA_KDE_Map"),
                                                                      tabsetPanel(
@@ -356,7 +356,7 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                        tabPanel("About G-Function",
                                                                                 column(12,
                                                                                        h2("......What is Ripley's G-Function?"),
-                                                                                       h5("......Essentially, Ripley's K-function K-function measures the number of events found up to a 
+                                                                                       h5("......Essentially, Ripley's K-function measures the number of events found up to a 
                                                                                  given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
                                                                                     or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
                                                                                        h3("......How to interpret the graph?"),
@@ -547,7 +547,7 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                  tabPanel("About K-Function",
                                                                           column(12,
                                                                                  h2("What is Ripley's K-Function?"),
-                                                                                 h5("Essentially, Ripley's K-function K-function measures the number of events found up to a 
+                                                                                 h5("Essentially, Ripley's K-function measures the number of events found up to a 
                                                                                  given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
                                                                                     or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
                                                                                  h3("How to interpret the graph?"),
@@ -572,8 +572,8 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                          tabPanel("About Cross K-Function",
                                                                   column(12,
                                                                          h2("What is Ripley's Cross K-Function?"),
-                                                                         h5("An extension of Ripley's K-function, the Cross K-function measures the number of main events (A) around
-                                                                         a set of secondary events (B), and again the graph helps illustrates the spatial dependence (clustering 
+                                                                         h5("An extension of Ripley's K-function, the Cross K-function measures the number of main point events (A) around
+                                                                         a set of secondary point events (B), and again the graph helps illustrates the spatial dependence (clustering 
                                                                          or dispersion) of the point A features around point B features (which in this case, are our chosen variables from the side panel) over a wide range of scales."),
                                                                          h3("How to interpret the graph?"),
                                                                          h5("If the observed line (black line) is above the envelop, then it means that the estimated Cross K(h) is:"),
@@ -854,7 +854,9 @@ server <- function(input, output, session){
                           tm_shape(kde_raster) + 
                           tm_raster("v", alpha = 0.7) +
                           tm_layout(legend.outside = TRUE, frame = FALSE, title = "KDE") +
-                          tm_basemap('OpenStreetMap'))
+                          tmap_options(basemaps = c("Esri.WorldGrayCanvas","OpenStreetMap", "Stamen.TonerLite"),
+                                       basemaps.alpha = c(0.8, 0.8, 0.8)) +
+                          tm_view(set.zoom.limits = c(11,13))) 
   })
   
   # SPPA G_Function
