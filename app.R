@@ -142,6 +142,8 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                         tags$li(tags$a(href = "https://www.linkedin.com/in/yiling-yu/", "Yu Yiling"), style = "font-size: 18px;")
                                                       ),
                                                       tags$br(),
+                                                      h4(tags$strong("Access our User Guide "), tags$a(href = "https://github.com/yiling-yu/IS415_Project/blob/master/User%20Guide.pdf", "Here")),
+                                                      tags$br(),
                                                       h4("This project is done for IS415 Geospatial Analytics & Application (SMU-X) 
                                              under the guidance of Professor Kam Tin Seong.", 
                                                          align = "center"),
@@ -186,6 +188,10 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                    h4("For each analysis, our application is able to provide users with kernel density maps
                                           of the input spatial point datasets and conduct various hypothesis tests to derive statistical conclusions 
                                           on the distributions of datasets."),
+                                                   h4("To illustrate the functions of our application, we will input examples for the two types of analysis."),
+                                                   tags$ul(
+                                                     tags$li("For Spatial Point Patterns Analysis, we would like to uncover whether McDonald's outlets in Singapore are distributed randomly and if not, what are the factors that affect the outlets' location.", style = "font-size: 18px; font-weight: 500;"),
+                                                     tags$li("For Network-Constrained Point Patterns Analysis, we would like to investigate whether various point events (e.g. Childcare Centres) in Punggol, Singapore are distributed randomly and if not, what are the secondary factors (e.g. Bus Stops) that affect their locations.", style = "font-size: 18px; font-weight: 500;")),
                                                    width = 9)
                            )),
                   
@@ -361,11 +367,11 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                                        h5("The G-function calculates the cumulative frequency distribution of the nearest neighbor distance of a point pattern."),
                                                                                        h3("How to interpret the graph?"),
                                                                                        h5("If the observed G is above the envelope, then "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble clustered distribution.")),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble clustered distribution.")),
                                                                                        h5("If not, if the observed G is below the envelope, then "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble dispersed distribution.")),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble dispersed distribution.")),
                                                                                        h5("Else, if the observed G is inside the envelope, it means "),
-                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the points resemble random distribution."))
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected (the value is not statistically significant) and we conclude the points resemble random distribution."))
                                                                                 ))))),
                                                      
                                                      tabPanel("SPPA F-Function", 
@@ -384,11 +390,11 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                                           and then it determines the minimum distance from each random point in P to any original points in the study area."),
                                                                                        h3("How to interpret the graph?"),
                                                                                        h5("If the observed F is above the envelope, then "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble dispersed distribution.")),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble dispersed distribution.")),
                                                                                        h5("If not, if the observed F is below the envelope, then "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the points resemble clustered distribution.")),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble clustered distribution.")),
                                                                                        h5("Else, if the observed F is inside the envelope, it means "),
-                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the points resemble random distribution."))
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected (the value is not statistically significant) and we conclude the points resemble random distribution."))
                                                                                 ))))),
                                                      
                                                      tabPanel("SPPA Cross L-Function", 
@@ -405,12 +411,13 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                                        h2("What is Cross L-Function?"),
                                                                                        h5("Simply put, Cross L-function measure the number of type A points up to a given distance from a type B point."),
                                                                                        h3("How to interpret the graph?"),
-                                                                                       h5("If the observed L is above the envelope, "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude two types of points resemble attraction patterns, suggesting clustering.")),
-                                                                                       h5("If not, if the observed L is below the enveloped, "),
-                                                                                       h5(tags$strong("we can reject null hypothesis and conclude the two types of points resemble repulsion patterns, suggesting dispersion.")),
+                                                                                       h5("If the observed L is above the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the two types of points resemble attraction patterns, suggesting clustering.")),
+                                                                                       h5("If not, if the observed L is below the envelope, then "),
+                                                                                       h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the two types of points resemble repulsion patterns, suggesting dispersion.")),
                                                                                        h5("Else, if the observed L is inside the envelope, it means "),
-                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected and we conclude the two types of points resemble random distribution and are independent of each other."))
+                                                                                       h5(tags$strong("the null hypothesis of CSR cannot be rejected (the value is not statistically significant) and we conclude the two types of points resemble random distribution and are independent of each other."))
+                                                                                       
                                                                                 ))))),
                                                    ))
                            )),
@@ -542,18 +549,18 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                                  id = "NetSPPA_K_info",
                                                                  tabPanel("About K-Function",
                                                                           column(12,
-                                                                                 h2("What is Ripley's K-Function?"),
-                                                                                 h5("Essentially, Ripley's K-function measures the number of events found up to a 
+                                                                                 h2("What is K-Function?"),
+                                                                                 h5("Essentially, K-function measures the number of events found up to a 
                                                                                  given distance of any particular event, and the graph helps illustrates the spatial dependence (clustering 
-                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of scales."),
+                                                                                    or dispersion) of point features (which in this case, is our chosen variable from the side panel) over a wide range of distances (m)."),
                                                                                  h3("How to interpret the graph?"),
-                                                                                 h5("If the observed line (black line) is above the envelop, then it means that the estimated K(h) is:"),
-                                                                                 h5(tags$strong("statistically significant and the point features shows a Clustering pattern.")),
-                                                                                 h5("If not, if the observed line (black line) is below the envelop, then it means that the estimated K(h) is:"),
-                                                                                 h5(tags$strong("statistically significant and the point features shows a Regular/Dispersion pattern.")),
-                                                                                 h5("Else, if the observed line (black line) is within the envelop, then it means that the estimated K(h) is:"),
-                                                                                 h5(tags$strong("not statistically significant and
-                                                                                    the point features shows a Complete Spatial Randomness pattern."))
+                                                                                 h5("If the observed K is above the envelope, then "),
+                                                                                 h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble clustered distribution.")),
+                                                                                 h5("If not, if the observed K is below the envelope, then "),
+                                                                                 h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the points resemble dispersed distribution.")),
+                                                                                 h5("Else, if the observed K is inside the envelope, it means "),
+                                                                                 h5(tags$strong("the null hypothesis of CSR cannot be rejected (the value is not statistically significant) and we conclude the points resemble random distribution."))
+                                                                                 
                                                               ))))),
                                                      
                                                      tabPanel("NetSPPA Cross K-Function", 
@@ -567,18 +574,17 @@ ui <- fluidPage(theme = shinytheme("lumen"),
                                                          id = "NetSPPA_CrossK_info",
                                                          tabPanel("About Cross K-Function",
                                                                   column(12,
-                                                                         h2("What is Ripley's Cross K-Function?"),
-                                                                         h5("An extension of Ripley's K-function, the Cross K-function measures the number of main point events (A) around
+                                                                         h2("What is Cross K-Function?"),
+                                                                         h5("An extension of K-function, the Cross K-function measures the number of main point events (A) around
                                                                          a set of secondary point events (B), and again the graph helps illustrates the spatial dependence (clustering 
-                                                                         or dispersion) of the point A features around point B features (which in this case, are our chosen variables from the side panel) over a wide range of scales."),
+                                                                         or dispersion) of the point A features around point B features (which in this case, are our chosen variables from the side panel) over a wide range of distances (m)."),
                                                                          h3("How to interpret the graph?"),
-                                                                         h5("If the observed line (black line) is above the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                         h5(tags$strong("statistically significant and the point A features shows a Clustering pattern around Point B features.")),
-                                                                         h5("If not, if the observed line (black line) is below the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                         h5(tags$strong("statistically significant and the point A features shows a Regular/Dispersion pattern around Point B features.")),
-                                                                         h5("Else, if the observed line (black line) is within the envelop, then it means that the estimated Cross K(h) is:"),
-                                                                         h5(tags$strong("not statistically significant and
-                                                                      the point features shows a Complete Spatial Randomness pattern."))
+                                                                         h5("If the observed K is above the envelope, then "),
+                                                                         h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the two types of points resemble attraction patterns, suggesting clustering.")),
+                                                                         h5("If not, if the observed K is below the envelope, then "),
+                                                                         h5(tags$strong("we can reject null hypothesis (the value is statistically significant) and conclude the two types of points resemble repulsion patterns, suggesting dispersion.")),
+                                                                         h5("Else, if the observed K is inside the envelope, it means "),
+                                                                         h5(tags$strong("the null hypothesis of CSR cannot be rejected (the value is not statistically significant) and we conclude the two types of points resemble random distribution and are independent of each other."))
                                                                   )))
                                                               )),
                                                      
